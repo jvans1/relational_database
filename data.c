@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <stdlib.h>
+#define MAX_ROWS 1000000
 /* collection, */
   /* content_type, */
   /* document_creation_date, */
@@ -50,30 +52,35 @@ int main ()
     "cia-crest-files-cia-crest-archive-metadata/14_export.csv"
   };
 
+  FILE *file;
   char *line = NULL;
   size_t size = 0;
-  FILE *file;
   const char *mode =  "r";
   char *token;
   const char *delim = ",";
   struct row *row;
-  char *temp_row[23];
+  char *temp_row[60];
+  struct row *rows[MAX_ROWS];
+  int row_count = 0;
+
 
   for(int i = 0; i < 14; i++){
     file = fopen(file_names[i], mode);
-    while(getline(&line, &size, file) != 0){
+    assert(file != NULL);
+    while(getline(&line, &size, file) != -1){
       token = strtok(line, delim);
-      int i = 0;
+      int index = 0;
       while(token != NULL ){
-        temp_row[i] = token;
+        temp_row[index] = token;
         token = strtok(NULL, delim);
-        i++;
+        index++;
       }
       row = malloc(sizeof(struct row));
       row->title = temp_row[21];
       row->url = temp_row[22];
       row->publication_date = temp_row[18];
-      printf("Row title: %s", row->title);
+      rows[row_count] = row;
+      row_count++;
     }
   }
 }
