@@ -82,14 +82,14 @@ int main ()
     }
   }
 
-  printf("What title do you want?", row_count);
+  printf("What title do you want?\n", row_count);
   char *input;
   getline(&input, &size, stdin);
   char newline = '\n';
   char *input_no_newline = strtok(input, &newline);
-  for(int i =0; i < row_count; i++){
-    if(strcmp(rows[i]->title, input_no_newline) == 0){
-      printf("Found title %s",rows[i]->title);
+  for(int a = 0; a < row_count; a++){
+    if(strcmp(rows[a]->title, input_no_newline) == 0){
+      printf("Found title %s",rows[a]->title);
     }
   }
 }
