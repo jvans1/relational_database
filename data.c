@@ -11,7 +11,11 @@ char *field(char *input)
   char *new_string;
   if(input != NULL) { current_field = input; };
   starting_point = current_field;
-  for(;*current_field != *comma;*current_field++){}
+  if(*starting_point == *comma) {
+    current_field++;
+    return "" ;
+  }
+  for(;*current_field != *comma && *current_field != '\n' && *current_field != '\0';*current_field++){}
   size_t new_string_size = current_field - starting_point;
   if(new_string_size == 0){
     return NULL;
@@ -27,26 +31,25 @@ struct row {
   char *url;
 };
 
+const char *file_names[] = {
+  "cia-crest-files-cia-crest-archive-metadata/1_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/2_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/3_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/4_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/5_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/6_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/7_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/8_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/9_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/10_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/11_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/12_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/13_export.csv",
+  "cia-crest-files-cia-crest-archive-metadata/14_export.csv"
+};
+
 int main ()
 {
-
-  const char *file_names[] = {
-    "test_file.csv"
-    /* "cia-crest-files-cia-crest-archive-metadata/1_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/2_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/3_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/4_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/5_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/6_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/7_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/8_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/9_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/10_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/11_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/12_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/13_export.csv", */
-    /* "cia-crest-files-cia-crest-archive-metadata/14_export.csv" */
-  };
 
   FILE *file;
   char *line = NULL;
@@ -59,24 +62,34 @@ int main ()
   int row_count = 0;
 
 
-  for(int i = 0; i < 1; i++){
+  for(int i = 0; i < 14; i++){
     file = fopen(file_names[i], mode);
     assert(file != NULL);
     while(getline(&line, &size, file) != -1){
       token = field(line);
-      /* token = strtok(line, delim); */
-      /* int index = 0; */
+      int index = 0;
       while(token != NULL ){
-        printf("Token: %s\n", token);
+        temp_row[index] = token;
+        index++;
         token = field(NULL);
       }
-      /* row = malloc(sizeof(struct row)); */
-      /* row->title = temp_row[0]; */
-      /* row->url = temp_row[1]; */
-      /* row->publication_date = temp_row[2]; */
-      /* rows[row_count] = row; */
-      /* row_count++; */
-      /* printf("First Name: %s, Last Name %s, Age %s\n", row-> title, row->url, row->publication_date); */
+      row = malloc(sizeof(struct row));
+      row->title = temp_row[21];
+      row->url = temp_row[22];
+      row->publication_date = temp_row[18];
+      rows[row_count] = row;
+      row_count++;
+    }
+  }
+
+  printf("What title do you want?", row_count);
+  char *input;
+  getline(&input, &size, stdin);
+  char newline = '\n';
+  char *input_no_newline = strtok(input, &newline);
+  for(int i =0; i < row_count; i++){
+    if(strcmp(rows[i]->title, input_no_newline) == 0){
+      printf("Found title %s",rows[i]->title);
     }
   }
 }
