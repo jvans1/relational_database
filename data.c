@@ -25,11 +25,11 @@ char *field(char *input)
   *current_field++;
   return  new_string;
 }
-struct row {
+typedef struct {
   char *publication_date;
   char *title;
   char *url;
-};
+} Row;
 
 const char *file_names[] = {
   "cia-crest-files-cia-crest-archive-metadata/1_export.csv",
@@ -48,6 +48,17 @@ const char *file_names[] = {
   "cia-crest-files-cia-crest-archive-metadata/14_export.csv"
 };
 
+int row_count = 0;
+
+Row * filter(char *title, Row *rows) {
+  for(int a = 0; a < row_count; a++){
+    if(strcmp(rows[a].title, title) == 0){
+      printf("Found title %s", rows[a].title);
+    }
+  }
+}
+
+
 int main ()
 {
 
@@ -56,10 +67,9 @@ int main ()
   size_t size = 0;
   const char *mode =  "r";
   char *token;
-  struct row *row;
+  Row *row;
   char *temp_row[60];
-  struct row *rows[MAX_ROWS];
-  int row_count = 0;
+  Row *rows[MAX_ROWS];
 
 
   for(int i = 0; i < 14; i++){
@@ -73,7 +83,7 @@ int main ()
         index++;
         token = field(NULL);
       }
-      row = malloc(sizeof(struct row));
+      row = malloc(sizeof(Row));
       row->title = temp_row[21];
       row->url = temp_row[22];
       row->publication_date = temp_row[18];
@@ -87,10 +97,6 @@ int main ()
   getline(&input, &size, stdin);
   char newline = '\n';
   char *input_no_newline = strtok(input, &newline);
-  for(int a = 0; a < row_count; a++){
-    if(strcmp(rows[a]->title, input_no_newline) == 0){
-      printf("Found title %s",rows[a]->title);
-    }
-  }
+  filter(input_no_newline)
 }
 
