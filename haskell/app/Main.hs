@@ -1,6 +1,16 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
-
-import Lib
+import Control.Monad(forM_)
+import Data.Text(pack)
+import Engine
+import CiaAdapter(recordsFromCSVs)
+import System.Environment(getArgs)
 
 main :: IO ()
-main = someFunc
+main = do
+  query <- fmap pack <$> getArgs
+  print query
+  results <- recordsFromCSVs
+  forM_ (runQuery (queryParser query) results ) $ \record -> do
+      putStrLn "Found Record:"
+      print record
