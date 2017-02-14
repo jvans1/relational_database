@@ -26,8 +26,13 @@ recordsFromCSV :: String -> IO (Either ParseError [ByteString])
 recordsFromCSV fileName = (fmap $ (fmap toRecord)) <$> parseFromFile csvFile fileName
 
 toRecord :: [String] -> ByteString
-toRecord parsedCSV = snoc (encodeUtf8 _title) 0 `append` snoc (encodeUtf8 _url) 0 `append` snoc (encodeUtf8 pub) _cr
+toRecord parsedCSV = field _title `append` field _url `append` snoc (encodeUtf8 pub) _cr
       where
         _title = pack $ parsedCSV !! 21
         _url = pack $ parsedCSV !! 22
         pub = pack $ parsedCSV !! 18
+
+
+field :: Text -> ByteString
+field f = snoc (encodeUtf8 f) 0
+
