@@ -6,31 +6,30 @@ import Data.Text.Encoding(encodeUtf8)
 import Data.Word8(_cr)
 import qualified Data.ByteString.Lazy as BL
 
-data Plan = Plan [Iterator] Scan
-data Scan = SeqScan Text
-data Iterator = Filter Int BL.ByteString [Iterator]
+data Iterator = Filter Int BL.ByteString Iterator | SeqScan String
 type Row = [BL.ByteString]
 
-executeQuery :: Plan -> IO [Row]
-executeQuery (Plan iterators scan) = parseRows iterators <$> runScan scan 
+executeQuery :: Iterator -> IO [Row]
+executeQuery (Filter num value next) = filterBy num value <$> executeQuery next
+executeQuery (SeqScan table)         = seqScan table
 
-parseRows :: [Iterator] -> [Row] -> [Row]
-parseRows (Filter rowNum value _:_) = filter (\row -> row !! rowNum == value) 
+filterBy :: Int -> BL.ByteString -> [Row] -> [Row]
+filterBy rowNum rowVal = filter (\row -> length row > rowNum && row !! rowNum == rowVal)
 
-runScan :: Scan -> IO [Row]
-runScan scan = splitRows <$> scanFile scan
+seqScan :: FilePath -> IO [Row]
+seqScan filepath = splitRows <$> scanFile filepath
 
 splitRows :: BL.ByteString -> [Row]
 splitRows = fmap (BL.split 0) . BL.split _cr
 
-scanFile :: Scan -> IO BL.ByteString
-scanFile (SeqScan filepath) = do
-    handle <- openFile (unpack filepath) ReadMode
+scanFile :: FilePath -> IO BL.ByteString
+scanFile filepath = do
+    handle <- openFile filepath ReadMode
     hSetBinaryMode handle True
     BL.hGetContents handle
 
 tread = read . unpack
 tToBl= BL.fromStrict . encodeUtf8
 
-parsePlan :: [Text] -> Plan
-parsePlan ("table":table:"filter":rowNum:value:_) = Plan [Filter (tread rowNum) (tToBl value) []] (SeqScan table)
+parsePlan :: [Text] -> Iterator
+parsePlan ("table":table:"filter":rowNum:value:[]) = Filter (tread rowNum) (tToBl value) (SeqScan $ unpack table)
