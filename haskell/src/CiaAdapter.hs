@@ -2,6 +2,7 @@
 
 module CiaAdapter(parseFiles)  where
 import Data.Monoid(mconcat)
+import Data.Word8(_cr)
 import Data.ByteString.Char8(ByteString, append)
 import Data.ByteString(snoc)
 import qualified Data.ByteString as BS
@@ -25,7 +26,7 @@ recordsFromCSV :: String -> IO (Either ParseError [ByteString])
 recordsFromCSV fileName = (fmap $ (fmap toRecord)) <$> parseFromFile csvFile fileName
 
 toRecord :: [String] -> ByteString
-toRecord parsedCSV = snoc (encodeUtf8 _title) 0 `append` snoc (encodeUtf8 _url) 0 `append` encodeUtf8 pub `append` "\n"
+toRecord parsedCSV = snoc (encodeUtf8 _title) 0 `append` snoc (encodeUtf8 _url) 0 `append` snoc (encodeUtf8 pub) _cr
       where
         _title = pack $ parsedCSV !! 21
         _url = pack $ parsedCSV !! 22

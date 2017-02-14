@@ -1,17 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Engine (runQuery, queryParser, Filterable, filterByField) where
-import Data.Text(Text, isPrefixOf)
+module Engine (executeQuery, parsePlan) where
+import System.IO(openFile, IOMode(..), hSetBinaryMode)
+import Data.Text(Text, unpack)
+import Data.Text.Encoding(encodeUtf8)
+import Data.Word8(_cr)
+import qualified Data.ByteString.Lazy as BL
 
-data Iterator a = Filter Text Text [Iterator a] | SeqScan (IO [a])
+data Plan = Plan [Iterator] Scan
+data Scan = SeqScan Text
+data Iterator = Filter Int BL.ByteString [Iterator]
+type Row = [BL.ByteString]
 
-runQuery :: (Show a, Filterable a) => Iterator [a] -> [a] -> IO [a]
-runQuery (Filter field value iterators) tuples = error "hi" -- filter (recordsMatch field value) (foldr runQuery tuples iterators)
+executeQuery :: Plan -> IO [Row]
+executeQuery (Plan iterators scan) = parseRows iterators <$> runScan scan 
 
-recordsMatch :: Filterable a => Text -> Text -> a -> Bool
-recordsMatch field value record = filterByField record field == value
+parseRows :: [Iterator] -> [Row] -> [Row]
+parseRows (Filter rowNum value _:_) = filter (\row -> row !! rowNum == value) 
 
-queryParser :: (Show a, Filterable a) => [Text] -> Iterator a
-queryParser ("filter:":filter:value:rest) = Filter filter value []
+runScan :: Scan -> IO [Row]
+runScan scan = splitRows <$> scanFile scan
 
-class Filterable a where
-  filterByField :: a -> Text -> Text
+splitRows :: BL.ByteString -> [Row]
+splitRows = fmap (BL.split 0) . BL.split _cr
+
+scanFile :: Scan -> IO BL.ByteString
+scanFile (SeqScan filepath) = do
+    handle <- openFile (unpack filepath) ReadMode
+    hSetBinaryMode handle True
+    BL.hGetContents handle
+
+tread = read . unpack
+tToBl= BL.fromStrict . encodeUtf8
+
+parsePlan :: [Text] -> Plan
+parsePlan ("table":table:"filter":rowNum:value:_) = Plan [Filter (tread rowNum) (tToBl value) []] (SeqScan table)
