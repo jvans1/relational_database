@@ -6,19 +6,35 @@ import Data.Text.Encoding(encodeUtf8)
 import Data.Word8(_cr)
 import qualified Data.ByteString.Lazy as BL
 
-data JoinType = CrossProduct
-data Iterator = Filter Int BL.ByteString Iterator | SeqScan Text | Join Text Text JoinType
+data Iterator =
+  Filter Int BL.ByteString Iterator
+  | SeqScan Text
+  | CrossJoin Iterator Iterator
+  | InnerJoin Iterator Iterator Column
+
+type Column = Int
 type Row = [BL.ByteString]
 
 executeQuery :: Iterator -> IO [Row]
-executeQuery (Filter num value next)                  = filterBy num value <$> executeQuery next
-executeQuery (SeqScan table)                          = seqScan table
-executeQuery j@Join{}                                 = joinTables j
+executeQuery (Filter num value next)                       = filterBy num value <$> executeQuery next
+executeQuery (SeqScan table)                               = seqScan table
+executeQuery j@CrossJoin{}                                 = crossJoin  j
+executeQuery j@InnerJoin{}                                 = innerJoin j
 
-joinTables :: Iterator -> IO [Row]
-joinTables (Join table1 table2 CrossProduct) = do
-        rows1 <-  seqScan table1
-        rows2 <-  seqScan table1
+innerJoin :: Iterator -> IO [Row]
+innerJoin (InnerJoin scan1 scan2 row) = do
+                        rows1 <- executeQuery scan1
+                        rows2 <- executeQuery scan2
+                        return $ do
+                          row1 <- rows1
+                          row2 <- rows2
+                          if row1 !! row == row2 !! row then return (row1 ++ row2)
+                          else return []
+
+crossJoin :: Iterator -> IO [Row]
+crossJoin (CrossJoin scan1 scan2) = do
+        rows1 <-  executeQuery scan1
+        rows2 <-  executeQuery scan2
         return $ do
           row1 <- rows1
           row2 <- rows2
@@ -44,5 +60,6 @@ tread = read . unpack
 tToBl= BL.fromStrict . encodeUtf8
 
 parsePlan :: [Text] -> Iterator
-parsePlan ("table":table:"filter":rowNum:value:[]) = Filter (tread rowNum) (tToBl value) (SeqScan table)
-parsePlan ("join":table1:col1:table2:col2:_)      = Join table1 table2 CrossProduct
+parsePlan ["table":table:"filter":rowNum:value] = Filter (tread rowNum) (tToBl value) (SeqScan table)
+parsePlan ("join":table1:table2:_)                 = CrossJoin (SeqScan table1) (SeqScan table2)
+parsePlan ("join":table1:table2:colNum:_)            = InnerJoin (SeqScan table1) (SeqScan table2) (tread colNum)

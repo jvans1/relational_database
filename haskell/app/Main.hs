@@ -12,6 +12,6 @@ main :: IO ()
 main = do
   plan <- parsePlan . fmap pack <$> getArgs
   tuples <- executeQuery plan
-  forM_ (tail tuples) $ \tuple -> do
+  forM_ tuples $ \tuple -> do
     putStrLn "\n"
     mapM_ BL.putStr tuple
