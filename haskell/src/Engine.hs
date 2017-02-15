@@ -25,7 +25,7 @@ innerJoin :: Iterator -> IO [Row]
 innerJoin (InnerJoin scan1 scan2 rowIndex1 rowIndex2) = do
                         rows1 <- executeQuery scan1
                         rows2 <- executeQuery scan2
-                        return $ do
+                        return $ filter (\x -> length x > 0) $ do
                           row1 <- rows1
                           row2 <- rows2
                           if row1 !! rowIndex1 == row2 !! rowIndex2 then return (row1 ++ row2)

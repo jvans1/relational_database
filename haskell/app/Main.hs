@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
+import Prelude hiding (putStrLn)
 import Data.Text(pack)
 import Control.Monad(forM_, mapM_)
+import Data.ByteString.Lazy.Char8(putStrLn)
 import Data.Text.Encoding(encodeUtf8)
 import Engine(executeQuery, parsePlan)
 import System.Environment(getArgs)
@@ -13,5 +15,4 @@ main = do
   plan <- parsePlan . fmap pack <$> getArgs
   tuples <- executeQuery plan
   forM_ tuples $ \tuple -> do
-    putStrLn "\n"
-    BL.putStr $ BL.intercalate "  |  " tuple
+    putStrLn $ BL.intercalate "  |  " tuple
