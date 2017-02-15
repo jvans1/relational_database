@@ -14,4 +14,4 @@ main = do
   tuples <- executeQuery plan
   forM_ tuples $ \tuple -> do
     putStrLn "\n"
-    mapM_ BL.putStr tuple
+    BL.putStr $ BL.intercalate "  |  " tuple

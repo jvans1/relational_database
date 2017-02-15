@@ -14,7 +14,7 @@ import Text.Parsec.Error(ParseError)
 import Text.ParserCombinators.Parsec.Prim(parseFromFile)
 
 
-fileNames = ["cia-crest-files-cia-crest-archive-metadata/6_export.csv" , "cia-crest-files-cia-crest-archive-metadata/7_export.csv" , "cia-crest-files-cia-crest-archive-metadata/8_export.csv", "cia-crest-files-cia-crest-archive-metadata/9_export.csv" , "cia-crest-files-cia-crest-archive-metadata/1_export.csv" , "cia-crest-files-cia-crest-archive-metadata/2_export.csv" ]
+fileNames = ["cia-crest-files-cia-crest-archive-metadata/6_export.csv"]
 
 parseFiles :: IO ()
 parseFiles = recordsFromCSVs >>= (BS.writeFile "cia" . mconcat)
@@ -23,16 +23,15 @@ recordsFromCSVs :: IO [ByteString]
 recordsFromCSVs = mconcat . rights <$> mapM recordsFromCSV fileNames
 
 recordsFromCSV :: String -> IO (Either ParseError [ByteString])
-recordsFromCSV fileName = (fmap $ (fmap toRecord)) <$> parseFromFile csvFile fileName
+recordsFromCSV fileName = (fmap $ (fmap toRecord)) <$> parseFromFile csvFile "test_data.csv"
 
 toRecord :: [String] -> ByteString
 toRecord parsedCSV = field _title `append` field _url `append` snoc (encodeUtf8 pub) _cr
       where
-        _title = pack $ parsedCSV !! 21
-        _url = pack $ parsedCSV !! 22
-        pub = pack $ parsedCSV !! 18
+        _title = pack $ parsedCSV !! 0
+        _url = pack $ parsedCSV !! 1
+        pub = pack $ parsedCSV !! 2
 
 
 field :: Text -> ByteString
 field f = snoc (encodeUtf8 f) 0
-
